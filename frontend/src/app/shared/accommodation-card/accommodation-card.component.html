@@ -1,0 +1,95 @@
+<div class="accommodation-card" [class.compact]="compactMode">
+  <div class="card-image">
+    <img
+      [src]="accommodation.photo_url || getDefaultImage()"
+      [alt]="accommodation.titre"
+      (error)="onImageError($event)">
+    <div class="image-overlay">
+      <button class="favorite-btn" (click)="onFavoriteClick()">
+        <lucide-icon [img]="Heart" size="20"></lucide-icon>
+      </button>
+      <div class="card-badges">
+        <span class="type-badge">
+          <lucide-icon [img]="getAccommodationIcon(accommodation.type)" size="14"></lucide-icon>
+          {{ getTypeDisplayName(accommodation.type) }}
+        </span>
+        <span class="status-badge" [class.active]="accommodation.statut === 'actif'">
+          {{ accommodation.statut }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-content">
+    <div class="card-header">
+      <h3 class="accommodation-title">{{ accommodation.titre || '[NO TITLE]' }}</h3>
+      <div class="agency-info">
+        <span class="agency-name">{{ accommodation.agence.nom || '[NO AGENCY]' }}</span>
+        <div class="agency-rating">
+          <span class="rating">
+            <lucide-icon [img]="Star" size="16" style="fill: #fbbf24; color: #fbbf24;"></lucide-icon>
+            {{ getFormattedRating(accommodation.agence.score_classement) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-details">
+      <p class="accommodation-address" *ngIf="accommodation.adresse">
+        <lucide-icon [img]="MapPin" size="16"></lucide-icon>
+        {{ accommodation.adresse }}
+      </p>
+      <p class="accommodation-description">
+        {{ getDescriptionPreview(accommodation.description) || '[NO DESCRIPTION]' }}
+      </p>
+
+      <div class="accommodation-features">
+        <span class="feature">
+          <lucide-icon [img]="Users" size="16"></lucide-icon>
+          {{ accommodation.capacite }} voyageurs
+        </span>
+      </div>
+
+      <!-- BIG TARIF DISPLAY -->
+      <div class="tarif-big">
+        <lucide-icon [img]="Banknote" size="22"></lucide-icon>
+        <span class="amount" style="font-size:2rem; font-weight:700;">
+          {{ accommodation.tarif_amount }}
+        </span>
+        <span class="currency" style="font-size:1.2rem; font-weight:500;">
+          {{ accommodation.devise | currencyLabel }}
+        </span>
+        <span class="unit" style="font-size:1rem; color:#6b7280;">
+          / {{ accommodation.tarif_unit }}
+        </span>
+      </div>
+    </div>
+
+    <div class="card-footer" *ngIf="showActions">
+      <div class="card-actions">
+        <!-- Client Actions -->
+        <ng-container *ngIf="!isAgencyView">
+          <button class="btn-secondary" (click)="onViewDetailsClick()">
+            <lucide-icon [img]="Eye" size="16"></lucide-icon>
+            Voir détails
+          </button>
+          <button class="btn-primary" (click)="onBookNowClick()">
+            <lucide-icon [img]="Calendar" size="16"></lucide-icon>
+            Réserver
+          </button>
+        </ng-container>
+        <!-- Agency Actions -->
+        <ng-container *ngIf="isAgencyView">
+          <button class="btn-secondary" (click)="onEditClick()">
+            <lucide-icon [img]="Edit" size="16"></lucide-icon>
+            Edit
+          </button>
+          <button class="btn-danger" (click)="onDeleteClick()">
+            <lucide-icon [img]="Trash2" size="16"></lucide-icon>
+            Delete
+          </button>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>

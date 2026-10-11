@@ -1,0 +1,57 @@
+<div class="dialog-backdrop" *ngIf="isOpen" (click)="cancel.emit()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>{{ mode === 'create' ? 'Create Accommodation' : 'Edit Accommodation' }}</h3>
+    </div>
+    <div class="dialog-body">
+      <div class="form-grid">
+        <label>
+          <span>Title</span>
+          <input type="text" [(ngModel)]="model.titre">
+        </label>
+        <label>
+          <span>Type</span>
+          <select [(ngModel)]="model.type">
+            <option value="hotel">Hotel</option>
+            <option value="maison">House</option>
+            <option value="studio">Studio</option>
+          </select>
+        </label>
+        <label>
+          <span>Capacity</span>
+          <input type="number" [(ngModel)]="model.capacite">
+        </label>
+        <label class="full">
+          <span>Address</span>
+          <input type="text" [(ngModel)]="model.adresse">
+        </label>
+        <label>
+          <span>Price</span>
+          <input type="number" [(ngModel)]="model.tarif_amount">
+        </label>
+        <label>
+          <span>Unit</span>
+          <select [(ngModel)]="model.tarif_unit">
+            <option value="heure">Hour</option>
+            <option value="jour">Day</option>
+            <option value="mois">Month</option>
+          </select>
+        </label>
+        <label>
+          <span>Currency</span>
+          <input type="text" [(ngModel)]="model.devise">
+        </label>
+        <label class="full">
+          <span>Description</span>
+          <textarea rows="4" [(ngModel)]="model.description"></textarea>
+        </label>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn-secondary" type="button" (click)="cancel.emit()">Cancel</button>
+      <button class="btn-primary" type="button" (click)="save.emit(model)">{{ mode === 'create' ? 'Create' : 'Save changes' }}</button>
+    </div>
+  </div>
+</div>
+
+

@@ -1,0 +1,59 @@
+<div class="conversation-card" [class.compact]="compact">
+  <!-- Reservation context strip -->
+  <div class="context" *ngIf="conversation()?.reservation as r">
+    <img class="thumb" *ngIf="r.logement?.photo_url" [src]="r.logement?.photo_url" [alt]="r.logement?.titre" loading="lazy" />
+    <div class="context-main">
+      <div class="context-title">
+        <span class="title">{{ r.logement?.titre || 'Réservation n°' + r.id }}</span>
+        <span class="res-id">n°{{ r.id }}</span>
+      </div>
+      <div class="context-meta">
+        <span><lucide-icon [img]="Calendar" size="13"></lucide-icon>{{ formatRange(r.date_debut, r.date_fin) }}</span>
+        <span *ngIf="!compact"><lucide-icon [img]="Users" size="13"></lucide-icon>{{ r.nb_personnes }} voyageur(s)</span>
+        <span class="status" [class]="'status status-' + r.statut">{{ statutLabel(r.statut) }}</span>
+      </div>
+    </div>
+    <div class="context-side" *ngIf="r.statut !== 'annule'">
+      <span class="side-label" *ngIf="!compact">Votre venue</span>
+      <app-intention-badge [intention]="conversation()?.confirmation?.intention ?? null"></app-intention-badge>
+    </div>
+  </div>
+
+  <div class="context general" *ngIf="conversation() && !conversation()?.reservation">
+    <div class="context-main">
+      <div class="context-title"><span class="title">Question générale</span></div>
+      <div class="context-meta"><span>Pour une réponse précise, ouvrez l'assistant depuis une réservation.</span></div>
+    </div>
+  </div>
+
+  <!-- Human handoff -->
+  <div class="handoff-banner" *ngIf="conversation()?.statut === 'handoff'">
+    <lucide-icon [img]="Headset" size="16"></lucide-icon>
+    <span>Un conseiller de l'agence a été sollicité : sa réponse apparaîtra ici.</span>
+  </div>
+
+  <!-- Recorded intention feedback -->
+  <div class="notice" *ngIf="notice() as text" role="status">
+    <lucide-icon [img]="CircleCheck" size="16"></lucide-icon>
+    <span>{{ text }}</span>
+  </div>
+
+  <app-chat-thread
+    class="thread"
+    [messages]="conversation()?.messages ?? []"
+    [loading]="loading()"
+    [sending]="sending()"
+    [errorMessage]="error()"
+    [quickReplies]="quickReplies()"
+    [compact]="compact"
+    [disabled]="!conversation()"
+    placeholder="Posez votre question à TravelPlan AI…"
+    (send)="onSend($event)"
+    (retry)="onRetry()">
+  </app-chat-thread>
+
+  <div class="footnote">
+    <lucide-icon [img]="ShieldCheck" size="12"></lucide-icon>
+    TravelPlan AI est une intelligence artificielle. Elle consulte uniquement vos réservations et ne peut ni annuler, ni rembourser, ni modifier un séjour.
+  </div>
+</div>

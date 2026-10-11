@@ -1,0 +1,79 @@
+<div class="page">
+  <app-header></app-header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-icon">
+        <lucide-icon [img]="Sparkles" size="26"></lucide-icon>
+      </div>
+      <div>
+        <h1>TravelPlan AI</h1>
+        <p>Assistant intelligent de réservation — vos réponses à partir de vos réservations réelles, en français, en anglais ou en darija.</p>
+      </div>
+      <span class="demo-pill" *ngIf="overview()?.assistant?.demo_mode" title="Aucune clé API configurée : moteur de démonstration basé sur des règles">
+        Mode démo
+      </span>
+    </div>
+  </section>
+
+  <main class="layout">
+    <aside class="sidebar" aria-label="Vos conversations">
+      <div class="sidebar-title">
+        <span>Vos séjours</span>
+        <a routerLink="/reservations" class="sidebar-link">
+          <lucide-icon [img]="ArrowLeft" size="13"></lucide-icon>
+          Mes réservations
+        </a>
+      </div>
+
+      <div class="sidebar-error" *ngIf="overviewError() as err">
+        {{ err }} <button type="button" (click)="loadOverview()">Réessayer</button>
+      </div>
+
+      <div class="items">
+        <button
+          type="button"
+          class="item general"
+          [class.active]="selectedReservationId() === null"
+          (click)="select(null)">
+          <div class="item-icon"><lucide-icon [img]="MessageCircle" size="18"></lucide-icon></div>
+          <div class="item-main">
+            <span class="item-title">Question générale</span>
+            <span class="item-sub">Toutes vos réservations</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          class="item"
+          *ngFor="let r of reservations()"
+          [class.active]="selectedReservationId() === r.id"
+          [class.muted]="r.statut === 'annule' || isPast(r)"
+          (click)="select(r.id)">
+          <img class="item-thumb" *ngIf="r.logement?.photo_url; else noPhoto" [src]="r.logement?.photo_url" [alt]="r.logement?.titre" loading="lazy" />
+          <ng-template #noPhoto><div class="item-icon">🏨</div></ng-template>
+          <div class="item-main">
+            <span class="item-title">{{ r.logement?.titre || 'Réservation n°' + r.id }}</span>
+            <span class="item-sub">{{ formatRange(r) }} · n°{{ r.id }}</span>
+            <app-intention-badge
+              *ngIf="r.statut === 'confirme' && !isPast(r) && r.confirmation"
+              [intention]="r.confirmation.intention">
+            </app-intention-badge>
+            <span class="cancelled" *ngIf="r.statut === 'annule'">Annulée</span>
+          </div>
+        </button>
+
+        <p class="sidebar-empty" *ngIf="overview() && !reservations().length">
+          Aucune réservation pour le moment. <a routerLink="/home">Trouver un logement</a>
+        </p>
+      </div>
+    </aside>
+
+    <section class="chat" *ngIf="selectedReservationId() !== undefined">
+      <app-assistant-conversation
+        [reservationId]="selectedReservationId() ?? null"
+        (conversationChange)="onConversationChange($event)">
+      </app-assistant-conversation>
+    </section>
+  </main>
+</div>

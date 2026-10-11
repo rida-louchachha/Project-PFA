@@ -1,0 +1,119 @@
+<div class="thread" [class.compact]="compact">
+  <div class="messages" #scroller role="log" aria-live="polite" aria-label="Conversation avec TravelPlan AI">
+    <div class="skeleton" *ngIf="loading">
+      <div class="skeleton-bubble"></div>
+      <div class="skeleton-bubble short"></div>
+      <div class="skeleton-bubble right"></div>
+    </div>
+
+    <ng-container *ngIf="!loading">
+      <div
+        *ngFor="let message of messages; trackBy: trackById"
+        class="message-row"
+        [class.own]="isOwn(message)"
+        [class.role-assistant]="message.role === 'assistant'"
+        [class.role-agent]="message.role === 'agent'"
+        [class.role-customer]="message.role === 'customer'">
+
+        <div class="avatar" *ngIf="!isOwn(message)" aria-hidden="true">
+          <lucide-icon *ngIf="message.role === 'assistant'" [img]="Sparkles" size="16"></lucide-icon>
+          <lucide-icon *ngIf="message.role === 'agent'" [img]="Headset" size="16"></lucide-icon>
+          <span *ngIf="message.role === 'customer'">C</span>
+        </div>
+
+        <div class="bubble-wrap">
+          <div class="meta">
+            <span class="author">{{ authorLabel(message) }}</span>
+            <span class="ai-tag" *ngIf="message.role === 'assistant'">IA</span>
+            <span class="kind-tag" *ngIf="kindLabel(message.kind) as kind">{{ kind }}</span>
+            <span class="demo-tag" *ngIf="message.demo_mode" title="Réponse générée par le moteur de démonstration (sans API IA)">mode démo</span>
+            <span class="time" *ngIf="message.created_at">{{ formatTime(message.created_at) }}</span>
+          </div>
+
+          <div class="bubble" [class.pending]="message.pending" [class.failed]="message.failed">
+            {{ message.content }}
+          </div>
+
+          <div class="failed-note" *ngIf="message.failed">
+            <lucide-icon [img]="TriangleAlert" size="12"></lucide-icon>
+            Non envoyé
+          </div>
+
+          <!-- Agency audit: what the AI detected and which tools it used -->
+          <div class="audit" *ngIf="viewer === 'agency'">
+            <span class="audit-chip intent" *ngIf="message.role === 'customer' && message.intent">
+              Intention détectée : {{ intentLabel(message.intent) }}
+            </span>
+            <span class="audit-chip" *ngIf="message.audit?.classification as c">
+              classifieur {{ c.intention }} · {{ (c.confidence * 100) | number:'1.0-0' }} % · {{ c.language }}
+            </span>
+            <span class="audit-chip" *ngIf="message.role === 'assistant' && toolNames(message)">
+              outils : {{ toolNames(message) }}
+            </span>
+            <span class="audit-chip warn" *ngIf="message.audit?.fallback">
+              repli : {{ message.audit?.fallback_reason }}
+            </span>
+            <span class="audit-chip warn" *ngIf="message.audit?.ungrounded_numbers?.length">
+              chiffres non vérifiés : {{ message.audit?.ungrounded_numbers?.join(', ') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="message-row role-assistant typing" *ngIf="sending && viewer === 'customer'">
+        <div class="avatar" aria-hidden="true">
+          <lucide-icon [img]="Sparkles" size="16"></lucide-icon>
+        </div>
+        <div class="bubble-wrap">
+          <div class="meta"><span class="author">{{ typingLabel }}</span></div>
+          <div class="bubble typing-bubble" aria-label="Réponse en cours">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty" *ngIf="!messages.length && !sending">
+        <lucide-icon [img]="Bot" size="28"></lucide-icon>
+        <p>Aucun message pour le moment.</p>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="error-banner" *ngIf="errorMessage" role="alert">
+    <lucide-icon [img]="TriangleAlert" size="16"></lucide-icon>
+    <span>{{ errorMessage }}</span>
+    <button type="button" class="link-btn" (click)="retry.emit()">
+      <lucide-icon [img]="RefreshCw" size="14"></lucide-icon>
+      Réessayer
+    </button>
+  </div>
+
+  <div class="quick-replies" *ngIf="quickReplies.length && !disabled">
+    <button
+      type="button"
+      class="chip"
+      *ngFor="let reply of quickReplies"
+      [disabled]="sending"
+      (click)="useQuickReply(reply)">
+      {{ reply }}
+    </button>
+  </div>
+
+  <form class="composer" (ngSubmit)="submit()" *ngIf="!disabled">
+    <textarea
+      name="draft"
+      rows="1"
+      [(ngModel)]="draft"
+      [attr.maxlength]="maxLength"
+      [placeholder]="placeholder"
+      [disabled]="sending"
+      (keydown)="onKeydown($event)"
+      aria-label="Votre message"></textarea>
+    <div class="composer-side">
+      <span class="counter" [class.near-limit]="draft.length > maxLength * 0.9">{{ draft.length }}/{{ maxLength }}</span>
+      <button type="submit" class="send-btn" [disabled]="!draft.trim() || sending" aria-label="Envoyer">
+        <lucide-icon [img]="Send" size="18"></lucide-icon>
+      </button>
+    </div>
+  </form>
+</div>

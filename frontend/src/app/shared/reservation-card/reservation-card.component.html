@@ -1,0 +1,92 @@
+<div class="reservation-card">
+  <!-- Header with status and id -->
+  <div class="card-header">
+    <div class="status-badge" [class]="'status-' + reservation.statut">
+      {{ getStatusText() }}
+    </div>
+    <div class="reservation-id">
+      <span class="id-label">Reservation</span>
+      <span class="id-value">#{{ reservation.id_reservation }}</span>
+    </div>
+  </div>
+
+  <!-- TravelPlan AI: customer arrival intention -->
+  <div class="intention-row" *ngIf="showIntention()">
+    <span class="intention-label">Votre venue</span>
+    <app-intention-badge [intention]="reservation.confirmation?.intention"></app-intention-badge>
+  </div>
+
+  <!-- Image and basic accommodation info -->
+  <div class="accommodation-info">
+    <div class="accommodation-image">
+      <img
+        [src]="getPhotoUrl()"
+        [alt]="getAccommodationTitle()"
+        (error)="onImageError($event)" />
+      <div class="image-overlay">
+        <div class="type-badge">
+          <lucide-icon [img]="getAccommodationIcon()" size="12"></lucide-icon>
+          {{ getTypeDisplayName() }}
+        </div>
+      </div>
+    </div>
+    <div class="accommodation-details">
+      <h3 class="accommodation-title">{{ getAccommodationTitle() }}</h3>
+      <div class="accommodation-agency" *ngIf="getAgencyName() as agencyName">
+        <span class="agency-label">by</span>
+        <span class="agency-name">{{ agencyName }}</span>
+      </div>
+      <div class="accommodation-location">
+        <lucide-icon [img]="MapPin" size="14"></lucide-icon>
+        {{ getAccommodationAddress() }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking details -->
+  <div class="booking-details">
+    <div class="booking-dates">
+      <div class="date-item">
+        <lucide-icon [img]="Calendar" size="16"></lucide-icon>
+        <div class="date-content">
+          <span class="date-label">Check-in</span>
+          <span class="date-value">{{ formatDate(reservation.date_debut) }}</span>
+        </div>
+      </div>
+      <div class="date-divider">
+        <span class="nights-count">{{ calculateNights(reservation.date_debut, reservation.date_fin) }} night(s)</span>
+      </div>
+      <div class="date-item">
+        <lucide-icon [img]="Calendar" size="16"></lucide-icon>
+        <div class="date-content">
+          <span class="date-label">Check-out</span>
+          <span class="date-value">{{ formatDate(reservation.date_fin) }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="booking-meta">
+      <div class="meta-item">
+        <lucide-icon [img]="Users" size="16"></lucide-icon>
+        <span>{{ reservation.nb_personnes }} guest(s)</span>
+      </div>
+      <div class="meta-item">
+        <lucide-icon [img]="Calendar" size="16"></lucide-icon>
+        <span>Booked {{ formatDate(reservation.created_at) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions: Add Review (only for confirmed reservations), TravelPlan AI -->
+  <div class="card-actions" *ngIf="reservation.statut !== 'annule'">
+    <a class="btn-assistant" [routerLink]="['/assistant', reservation.id_reservation]" (click)="$event.stopPropagation()">
+      <lucide-icon [img]="Sparkles" size="16"></lucide-icon>
+      <span>Assistant IA</span>
+    </a>
+    <button class="btn-review" type="button" *ngIf="reservation.statut === 'confirme'" (click)="$event.stopPropagation(); addReview.emit(reservation)">
+      <lucide-icon [img]="Star" size="16"></lucide-icon>
+      <span>Add Review</span>
+    </button>
+  </div>
+</div>
+
+

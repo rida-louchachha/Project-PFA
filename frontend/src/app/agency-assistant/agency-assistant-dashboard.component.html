@@ -1,0 +1,154 @@
+<div class="page">
+  <app-header></app-header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-icon"><lucide-icon [img]="Sparkles" size="24"></lucide-icon></div>
+      <div class="hero-text">
+        <h1>Tableau de bord TravelPlan AI</h1>
+        <p>{{ dashboard()?.agence?.nom || 'Votre agence' }} — confirmations de venue, demandes des clients et conversations à reprendre.</p>
+      </div>
+      <button type="button" class="refresh" (click)="load()" [disabled]="loading()">
+        <lucide-icon [img]="RefreshCw" size="16"></lucide-icon>
+        Actualiser
+      </button>
+    </div>
+  </section>
+
+  <main class="content">
+    <div class="error-card" *ngIf="error() as err">
+      <lucide-icon [img]="TriangleAlert" size="18"></lucide-icon>
+      <span>{{ err }}</span>
+    </div>
+
+    <!-- AI business insights (KPIs + arrivals chart + AI summary) -->
+    <app-agency-insights *ngIf="!error()"></app-agency-insights>
+
+    <!-- Conversation / arrival-confirmation cards -->
+    <div class="stats" *ngIf="dashboard() as d">
+      <div class="stat">
+        <div class="stat-icon tone-brand"><lucide-icon [img]="CalendarClock" size="20"></lucide-icon></div>
+        <div><div class="stat-value">{{ d.stats.upcoming_total }}</div><div class="stat-label">Séjours à venir</div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon tone-success"><lucide-icon [img]="CircleCheck" size="20"></lucide-icon></div>
+        <div><div class="stat-value">{{ d.stats.intention_confirmed }}</div><div class="stat-label">Venue confirmée</div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon tone-neutral"><lucide-icon [img]="Clock" size="20"></lucide-icon></div>
+        <div><div class="stat-value">{{ d.stats.awaiting_response }}</div><div class="stat-label">Sans réponse</div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon tone-danger"><lucide-icon [img]="PenLine" size="20"></lucide-icon></div>
+        <div><div class="stat-value">{{ d.stats.change_requests }}</div><div class="stat-label">Annulation / modification</div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon tone-warning"><lucide-icon [img]="TriangleAlert" size="20"></lucide-icon></div>
+        <div><div class="stat-value">{{ d.stats.uncertain }}</div><div class="stat-label">Incertains</div></div>
+      </div>
+      <div class="stat highlight" [class.alert]="d.stats.handoffs_open > 0">
+        <div class="stat-icon tone-violet"><lucide-icon [img]="Headset" size="20"></lucide-icon></div>
+        <div><div class="stat-value">{{ d.stats.handoffs_open }}</div><div class="stat-label">Assistance humaine</div></div>
+      </div>
+    </div>
+
+    <div class="workspace" [class.with-panel]="conversation() || conversationLoading()">
+      <!-- Reservations -->
+      <section class="card list-card">
+        <div class="tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            *ngFor="let t of tabs"
+            class="tab"
+            [class.active]="tab() === t.id"
+            [attr.aria-selected]="tab() === t.id"
+            (click)="tab.set(t.id)">
+            {{ t.label }}
+            <span class="count">{{ tabCount(t.id) }}</span>
+          </button>
+        </div>
+
+        <div class="skeleton-rows" *ngIf="loading()">
+          <div class="skeleton-row" *ngFor="let i of [1, 2, 3, 4]"></div>
+        </div>
+
+        <div class="rows" *ngIf="!loading()">
+          <div class="row" *ngFor="let r of rows()" [class.attention]="r.confirmation?.needs_attention || handoffFor(r)">
+            <div class="row-main">
+              <div class="row-title">
+                <span class="customer">{{ r.customer?.prenom }} {{ r.customer?.nom }}</span>
+                <span class="res-id">n°{{ r.id }}</span>
+              </div>
+              <div class="row-sub">
+                {{ r.logement?.titre }} · {{ formatDate(r.date_debut) }} → {{ formatDate(r.date_fin) }} · {{ r.nb_personnes }} pers.
+              </div>
+            </div>
+            <div class="row-meta">
+              <span class="pay" [class]="'pay pay-' + (r.paiement_statut || 'none')">Paiement : {{ paymentLabel(r.paiement_statut) }}</span>
+              <app-intention-badge [intention]="r.confirmation?.intention ?? null"></app-intention-badge>
+              <span class="handoff-tag" *ngIf="handoffFor(r)">
+                <lucide-icon [img]="Headset" size="12"></lucide-icon>
+                Conseiller demandé
+              </span>
+            </div>
+            <div class="row-action">
+              <button
+                type="button"
+                class="btn-open"
+                *ngIf="r.conversation; else noConversation"
+                (click)="openConversation(r.conversation.id)">
+                <lucide-icon [img]="MessageSquareText" size="15"></lucide-icon>
+                Conversation
+              </button>
+              <ng-template #noConversation><span class="no-conv">Pas encore de conversation</span></ng-template>
+            </div>
+          </div>
+
+          <div class="empty" *ngIf="!rows().length">
+            <lucide-icon [img]="Sparkles" size="26"></lucide-icon>
+            <p>Aucun séjour dans cette catégorie.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Conversation panel -->
+      <section class="card conversation-card" *ngIf="conversation() || conversationLoading()">
+        <div class="conv-header">
+          <div>
+            <div class="conv-title">
+              {{ conversation()?.customer?.prenom }} {{ conversation()?.customer?.nom }}
+              <span class="res-id" *ngIf="conversation()?.reservation as res">· réservation n°{{ res.id }}</span>
+            </div>
+            <div class="conv-sub" *ngIf="conversation()?.reservation as res">{{ res.logement?.titre }} · {{ formatDate(res.date_debut) }}</div>
+          </div>
+          <button type="button" class="icon-btn" (click)="closeConversation()" aria-label="Fermer">
+            <lucide-icon [img]="X" size="18"></lucide-icon>
+          </button>
+        </div>
+
+        <div class="handoff-box" *ngIf="conversation()?.statut === 'handoff'">
+          <div>
+            <strong>Assistance humaine demandée</strong>
+            <span *ngIf="conversation()?.handoff_reason as reason"> — {{ reason }}</span>
+          </div>
+          <button type="button" class="btn-resolve" (click)="resolve()">Marquer comme traité</button>
+        </div>
+
+        <app-chat-thread
+          class="thread"
+          viewer="agency"
+          [messages]="conversation()?.messages ?? []"
+          [loading]="conversationLoading()"
+          [sending]="replying()"
+          [errorMessage]="conversationError()"
+          [maxLength]="2000"
+          [disabled]="!conversation()"
+          placeholder="Répondre au client en tant que conseiller de l'agence…"
+          (send)="reply($event)"
+          (retry)="conversation() && openConversation(conversation()!.id)">
+        </app-chat-thread>
+      </section>
+    </div>
+  </main>
+</div>

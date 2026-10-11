@@ -1,0 +1,39 @@
+<div class="dialog-backdrop" *ngIf="isOpen" (click)="onClose()">
+  <div class="dialog-container" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>Add a Review</h3>
+      <button class="close-btn" type="button" (click)="onClose()">
+        <lucide-icon [img]="X" size="20"></lucide-icon>
+      </button>
+    </div>
+
+    <div class="dialog-body">
+      <p class="agency-target" *ngIf="agencyName">for <strong>{{ agencyName }}</strong></p>
+
+      <div class="stars" (mouseleave)="setHover(0)">
+        <button
+          *ngFor="let s of [1,2,3,4,5]"
+          type="button"
+          class="star-btn"
+          [class.active]="s <= (hoverRating || rating)"
+          (mouseenter)="setHover(s)"
+          (click)="setRating(s)">
+          <lucide-icon [img]="Star" size="28"></lucide-icon>
+        </button>
+      </div>
+
+      <label class="comment-label" for="review_comment">Comment</label>
+      <textarea id="review_comment" [(ngModel)]="comment" rows="4" placeholder="Share your experience..."></textarea>
+    </div>
+
+    <div class="dialog-footer">
+      <button class="btn-secondary" type="button" (click)="onClose()">Cancel</button>
+      <button class="btn-primary" type="button" (click)="onSubmit()" [disabled]="isSubmitting">
+        <lucide-icon [img]="Loader2" size="16" *ngIf="isSubmitting" class="spinning"></lucide-icon>
+        Submit Review
+      </button>
+    </div>
+  </div>
+</div>
+
+

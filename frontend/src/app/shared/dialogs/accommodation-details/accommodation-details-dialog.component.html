@@ -1,0 +1,161 @@
+<!-- Dialog Backdrop -->
+<div 
+  class="dialog-backdrop" 
+  *ngIf="isOpen" 
+  (click)="onBackdropClick($event)">
+  
+  <!-- Dialog Container -->
+  <div class="dialog-container" (click)="$event.stopPropagation()">
+    
+    <!-- Dialog Header -->
+    <div class="dialog-header">
+      <div class="header-content">
+        <div class="title-section">
+          <div class="type-badge">
+            <lucide-icon [img]="getAccommodationIcon(accommodation.type)" size="20"></lucide-icon>
+            <span>{{ getTypeDisplayName(accommodation.type) }}</span>
+          </div>
+          <h2 class="dialog-title">{{ accommodation.titre }}</h2>
+          <div class="status-badge" [ngClass]="getStatusClass(accommodation.statut)">
+            {{ getStatusDisplayName(accommodation.statut) }}
+          </div>
+        </div>
+      </div>
+      <button class="close-btn" (click)="onClose()" type="button">
+        <lucide-icon [img]="X" size="24"></lucide-icon>
+      </button>
+    </div>
+
+    <!-- Dialog Body -->
+    <div class="dialog-body">
+      
+      <!-- Image Section -->
+      <div class="image-section">
+        <img 
+          [src]="accommodation.photo_url || getDefaultImage()" 
+          [alt]="accommodation.titre"
+          (error)="onImageError($event)"
+          class="accommodation-image">
+      </div>
+
+      <!-- Main Content -->
+      <div class="content-sections">
+        
+        <!-- Basic Info Section -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <lucide-icon [img]="Info" size="20"></lucide-icon>
+            Basic Information
+          </h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <lucide-icon [img]="Users" size="18"></lucide-icon>
+              <div class="info-content">
+                <span class="info-label">Capacity</span>
+                <span class="info-value">{{ accommodation.capacite }} guests</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <lucide-icon [img]="MapPin" size="18"></lucide-icon>
+              <div class="info-content">
+                <span class="info-label">Location</span>
+                <span class="info-value">{{ accommodation.adresse || 'Address not specified' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Section -->
+        <div class="info-section" *ngIf="accommodation.description">
+          <h3 class="section-title">
+            <lucide-icon [img]="Info" size="20"></lucide-icon>
+            Description
+          </h3>
+          <p class="description-text">{{ accommodation.description }}</p>
+        </div>
+
+        <!-- Agency Info Section -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <lucide-icon [img]="Building" size="20"></lucide-icon>
+            Agency Information
+          </h3>
+          <div class="agency-info">
+            <div class="agency-header">
+              <h4 class="agency-name">{{ accommodation.agence.nom }}</h4>
+              <div class="agency-rating" *ngIf="accommodation.agence.score_classement">
+                <lucide-icon [img]="Star" size="16"></lucide-icon>
+                <span>{{ getFormattedRating(accommodation.agence.score_classement) }}</span>
+              </div>
+            </div>
+            <div class="agency-contact" *ngIf="accommodation.agence.email">
+              <div class="contact-item">
+                <lucide-icon [img]="Mail" size="16"></lucide-icon>
+                <span>{{ accommodation.agence.email }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing Section -->
+        <div class="info-section pricing-section">
+          <h3 class="section-title">
+            <lucide-icon [img]="Banknote" size="20"></lucide-icon>
+            Pricing
+          </h3>
+          <div class="pricing-info">
+            <div class="price-display">
+              <span class="price-amount">{{ accommodation.tarif_amount }}</span>
+              <span class="price-currency">{{ accommodation.devise | currencyLabel }}</span>
+              <span class="price-unit">/ {{ accommodation.tarif_unit }}</span>
+            </div>
+            <p class="pricing-note">Prices may vary based on season and availability</p>
+          </div>
+        </div>
+
+        <!-- Additional Details -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <lucide-icon [img]="Calendar" size="20"></lucide-icon>
+            Additional Details
+          </h3>
+          <div class="details-grid">
+            <div class="detail-item">
+              <span class="detail-label">Property Type</span>
+              <span class="detail-value">{{ getTypeDisplayName(accommodation.type) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Status</span>
+              <span class="detail-value" [ngClass]="getStatusClass(accommodation.statut)">
+                {{ getStatusDisplayName(accommodation.statut) }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Listed On</span>
+              <span class="detail-value">{{ accommodation.created_at | date:'mediumDate' }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Dialog Footer -->
+    <div class="dialog-footer">
+      <div class="footer-actions">
+        <button class="btn-secondary" (click)="onClose()" type="button">
+          Close
+        </button>
+        <button 
+          class="btn-primary" 
+          (click)="onBookNow()" 
+          type="button"
+          [disabled]="accommodation.statut !== 'actif'">
+          <lucide-icon [img]="Calendar" size="16"></lucide-icon>
+          Book Now
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

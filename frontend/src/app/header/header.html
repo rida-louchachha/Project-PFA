@@ -1,0 +1,144 @@
+<header class="app-header" [class.scrolled]="scrolled()">
+  <span class="ribbon" aria-hidden="true"></span>
+
+  <div class="header-container">
+    <!-- Brand -->
+    <a routerLink="/home" class="brand-link" aria-label="TravelPlan — accueil">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40">
+          <defs>
+            <linearGradient id="tpStar" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#fde68a" />
+              <stop offset="1" stop-color="#ffffff" />
+            </linearGradient>
+          </defs>
+          <rect x="11" y="11" width="18" height="18" rx="2" fill="none" stroke="url(#tpStar)" stroke-width="2" />
+          <rect x="11" y="11" width="18" height="18" rx="2" fill="none" stroke="url(#tpStar)" stroke-width="2" transform="rotate(45 20 20)" />
+          <circle cx="20" cy="20" r="3.5" fill="#fde68a" />
+        </svg>
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">TravelPlan</span>
+        <span class="brand-tagline">Maroc · IA</span>
+      </span>
+    </a>
+
+    <!-- Navigation -->
+    <nav class="header-nav" aria-label="Navigation principale" *ngIf="currentUser$ | async as navUser">
+      <div class="nav-pill" #navPill>
+        <span class="nav-indicator" *ngIf="indicator() as ind" [style.left.px]="ind.left" [style.width.px]="ind.width"></span>
+        <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+          <lucide-icon [img]="House" size="16"></lucide-icon>
+          Accueil
+        </a>
+        <a routerLink="/home" fragment="search" class="nav-link">
+          <lucide-icon [img]="Search" size="16"></lucide-icon>
+          Rechercher
+        </a>
+        <!-- Manage: bookings for clients, listings (home page) for agencies -->
+        <a [routerLink]="navUser.role === 'agence' ? '/home' : '/reservations'"
+           [routerLinkActive]="navUser.role === 'agence' ? '' : 'active'"
+           class="nav-link">
+          <lucide-icon [img]="navUser.role === 'agence' ? LayoutDashboard : CalendarCheck" size="16"></lucide-icon>
+          Gérer
+        </a>
+      </div>
+
+      <a *ngIf="navUser.role === 'client'" routerLink="/assistant" routerLinkActive="active" class="nav-link nav-ai">
+        <lucide-icon [img]="Sparkles" size="16"></lucide-icon>
+        Assistant IA
+        <span class="live-dot" aria-hidden="true"></span>
+      </a>
+      <a *ngIf="navUser.role === 'agence'" routerLink="/agence/assistant" routerLinkActive="active" class="nav-link nav-ai">
+        <lucide-icon [img]="Sparkles" size="16"></lucide-icon>
+        Tableau IA
+        <span class="live-dot" aria-hidden="true"></span>
+      </a>
+    </nav>
+
+    <div class="header-right" *ngIf="currentUser$ | async as user">
+      <!-- Personal widget: next trip countdown / today's arrivals -->
+      <a class="trip-widget" *ngIf="widget() as w" [routerLink]="w.link" [fragment]="w.fragment">
+        <span class="trip-icon" [class.explore]="w.icon === 'explore'">
+          <lucide-icon [img]="w.icon === 'arrivals' ? PlaneLanding : w.icon === 'explore' ? Compass : Luggage" size="16"></lucide-icon>
+        </span>
+        <span class="trip-text">
+          <strong>{{ w.title }}</strong>
+          <small>{{ w.subtitle }}</small>
+        </span>
+      </a>
+
+      <!-- Profile -->
+      <div class="user-dropdown">
+        <button type="button" class="user-trigger" (click)="toggleDropdown()" [class.open]="showDropdown" [attr.aria-expanded]="showDropdown" aria-haspopup="menu">
+          <span class="avatar" [class.agency]="user.role === 'agence'">
+            <span class="avatar-inner">{{ getInitials(user) }}</span>
+          </span>
+          <span class="user-text">
+            <span class="hello">
+              <span class="greeting">{{ greeting() }},</span> {{ user.prenom }}
+            </span>
+            <span class="role">{{ getRoleDisplayName(user.role) }}</span>
+          </span>
+          <lucide-icon class="chevron" [img]="ChevronDown" size="16"></lucide-icon>
+        </button>
+
+        <div class="dropdown-menu" *ngIf="showDropdown" role="menu">
+          <div class="menu-profile">
+            <span class="avatar big" [class.agency]="user.role === 'agence'"><span class="avatar-inner">{{ getInitials(user) }}</span></span>
+            <div class="menu-who">
+              <strong>{{ user.prenom }} {{ user.nom }}</strong>
+              <span>{{ user.email }}</span>
+              <span class="role-badge" [class.agency]="user.role === 'agence'">
+                <lucide-icon [img]="user.role === 'agence' ? Building2 : Luggage" size="12"></lucide-icon>
+                {{ getRoleDisplayName(user.role) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="menu-items">
+            <a *ngIf="user.role === 'client'" routerLink="/reservations" class="menu-item" role="menuitem" (click)="closeDropdown()">
+              <lucide-icon [img]="CalendarCheck" size="16"></lucide-icon> Mes réservations
+            </a>
+            <a *ngIf="user.role === 'client'" routerLink="/assistant" class="menu-item" role="menuitem" (click)="closeDropdown()">
+              <lucide-icon [img]="Sparkles" size="16"></lucide-icon> Assistant IA
+            </a>
+            <a *ngIf="user.role === 'agence'" routerLink="/agence/assistant" class="menu-item" role="menuitem" (click)="closeDropdown()">
+              <lucide-icon [img]="LayoutDashboard" size="16"></lucide-icon> Tableau IA
+            </a>
+            <a routerLink="/home" fragment="search" class="menu-item" role="menuitem" (click)="closeDropdown()">
+              <lucide-icon [img]="Search" size="16"></lucide-icon> Recherche intelligente
+            </a>
+            <!-- Favorites page not implemented yet: no navigation -->
+            <a role="menuitem" tabindex="0" class="menu-item soon" (click)="closeDropdown()">
+              <lucide-icon [img]="Heart" size="16"></lucide-icon> Favoris <span class="soon-badge">bientôt</span>
+            </a>
+          </div>
+
+          <button type="button" class="menu-item logout" role="menuitem" (click)="logout()">
+            <lucide-icon [img]="LogOut" size="16"></lucide-icon> Se déconnecter
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile menu -->
+      <button type="button" class="burger" (click)="mobileOpen.set(!mobileOpen())" [attr.aria-expanded]="mobileOpen()" aria-label="Menu">
+        <lucide-icon [img]="mobileOpen() ? X : Menu" size="20"></lucide-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile navigation panel -->
+  <nav class="mobile-panel" *ngIf="mobileOpen() && (currentUser$ | async) as navUser" aria-label="Navigation mobile">
+    <a class="mobile-trip" *ngIf="widget() as w" [routerLink]="w.link" [fragment]="w.fragment">
+      <lucide-icon [img]="w.icon === 'arrivals' ? PlaneLanding : w.icon === 'explore' ? Compass : Luggage" size="16"></lucide-icon>
+      <span><strong>{{ w.title }}</strong> · {{ w.subtitle }}</span>
+    </a>
+    <a routerLink="/home" class="mobile-link"><lucide-icon [img]="House" size="18"></lucide-icon> Accueil</a>
+    <a routerLink="/home" fragment="search" class="mobile-link"><lucide-icon [img]="Search" size="18"></lucide-icon> Rechercher</a>
+    <a [routerLink]="navUser.role === 'agence' ? '/home' : '/reservations'" class="mobile-link"><lucide-icon [img]="CalendarCheck" size="18"></lucide-icon> Gérer</a>
+    <a [routerLink]="navUser.role === 'agence' ? '/agence/assistant' : '/assistant'" class="mobile-link ai">
+      <lucide-icon [img]="Sparkles" size="18"></lucide-icon> {{ navUser.role === 'agence' ? 'Tableau IA' : 'Assistant IA' }}
+    </a>
+  </nav>
+</header>

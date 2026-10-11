@@ -1,0 +1,185 @@
+<div class="auth-scene">
+  <!-- Animated Moroccan night: stars, moon, drifting orbs, zellige, dunes -->
+  <div class="sky" aria-hidden="true">
+    <span class="star" *ngFor="let s of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]"></span>
+    <span class="moon"></span>
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+    <span class="zellige"></span>
+    <svg class="dunes" viewBox="0 0 1440 260" preserveAspectRatio="none">
+      <path class="dune dune-back" d="M0 170 C 180 110 360 120 540 160 C 720 200 900 120 1080 130 C 1260 140 1350 170 1440 160 L1440 260 L0 260 Z" />
+      <path class="dune dune-front" d="M0 210 C 220 160 420 190 640 210 C 860 230 1060 170 1260 190 C 1350 198 1400 205 1440 200 L1440 260 L0 260 Z" />
+    </svg>
+  </div>
+
+  <main class="glass-card">
+    <!-- Showcase -->
+    <section class="showcase" aria-hidden="true">
+      <div class="brand">
+        <span class="brand-icon">🏨</span>
+        <span class="brand-name">TravelPlan</span>
+      </div>
+
+      <h1>Votre Maroc,<br /><span>guidé par l'IA</span></h1>
+      <p class="lead">Riads, désert, océan : réservez auprès d'agences marocaines et laissez TravelPlan AI vous accompagner jusqu'à l'arrivée.</p>
+
+      <ul class="features">
+        <li><span class="feat-icon"><lucide-icon [img]="Search" size="16"></lucide-icon></span> Recherche intelligente en langage naturel</li>
+        <li><span class="feat-icon"><lucide-icon [img]="MessageCircle" size="16"></lucide-icon></span> Assistant IA en français, anglais et darija</li>
+        <li><span class="feat-icon"><lucide-icon [img]="ShieldCheck" size="16"></lucide-icon></span> Réponses vérifiées à partir de vos réservations</li>
+      </ul>
+
+      <!-- Floating preview of the AI assistant -->
+      <div class="preview">
+        <div class="preview-bubble ai">
+          <span class="preview-avatar"><lucide-icon [img]="Sparkles" size="14"></lucide-icon></span>
+          <div>
+            <strong>TravelPlan AI</strong>
+            <p>Bonjour Youssef ! Votre séjour au <em>Riad Jardin de la Médina</em> commence demain. Confirmez-vous votre venue ?</p>
+          </div>
+        </div>
+        <div class="preview-bubble me">Oui, je confirme ✨</div>
+        <div class="preview-status"><lucide-icon [img]="CircleCheck" size="13"></lucide-icon> Venue confirmée</div>
+      </div>
+    </section>
+
+    <!-- Form -->
+    <section class="form-panel">
+      <div class="tabs" role="tablist" [class.signup]="activeTab() === 'signup'">
+        <span class="tab-indicator"></span>
+        <button type="button" role="tab" class="tab" [class.active]="activeTab() === 'signin'" [attr.aria-selected]="activeTab() === 'signin'" (click)="switchTab('signin')">
+          Connexion
+        </button>
+        <button type="button" role="tab" class="tab" [class.active]="activeTab() === 'signup'" [attr.aria-selected]="activeTab() === 'signup'" (click)="switchTab('signup')">
+          Inscription
+        </button>
+      </div>
+
+      <div class="heading">
+        <h2>{{ activeTab() === 'signin' ? 'Bon retour parmi nous 👋' : 'Créer votre compte' }}</h2>
+        <p>{{ activeTab() === 'signin' ? 'Connectez-vous pour retrouver vos séjours et votre assistant.' : 'Voyageur ou agence de voyage, rejoignez TravelPlan en une minute.' }}</p>
+      </div>
+
+      <!-- Success/Error Messages -->
+      <div class="message success" *ngIf="successMessage()" role="status">{{ successMessage() }}</div>
+      <div class="message error" *ngIf="errorMessage()" role="alert">{{ errorMessage() }}</div>
+
+      <form *ngIf="activeTab() === 'signin'" [formGroup]="signInForm" (ngSubmit)="submitSignIn()" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <div class="input-wrap" [class.invalid]="signInForm.get('email')?.touched && signInForm.get('email')?.invalid">
+            <lucide-icon [img]="Mail" size="18"></lucide-icon>
+            <input id="email" type="email" formControlName="email" placeholder="vous@exemple.com" autocomplete="email" />
+          </div>
+          <div class="error" *ngIf="signInForm.get('email')?.touched && signInForm.get('email')?.invalid">Saisissez une adresse email valide.</div>
+        </div>
+
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <div class="input-wrap" [class.invalid]="signInForm.get('password')?.touched && signInForm.get('password')?.invalid">
+            <lucide-icon [img]="Lock" size="18"></lucide-icon>
+            <input id="password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" placeholder="••••••••" autocomplete="current-password" />
+            <button type="button" class="eye" (click)="showPassword.set(!showPassword())" [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+              <lucide-icon [img]="showPassword() ? EyeOff : Eye" size="18"></lucide-icon>
+            </button>
+          </div>
+          <div class="error" *ngIf="signInForm.get('password')?.touched && signInForm.get('password')?.invalid">Mot de passe requis (6 caractères minimum).</div>
+        </div>
+
+        <button class="primary" type="submit" [disabled]="(isLoading$ | async) || signInForm.invalid">
+          <span class="spinner" *ngIf="isLoading$ | async"></span>
+          <span>{{ (isLoading$ | async) ? 'Connexion…' : 'Se connecter' }}</span>
+        </button>
+
+        <div class="demo">
+          <span class="demo-label">Comptes de démonstration</span>
+          <div class="demo-chips">
+            <button type="button" class="demo-chip" (click)="fillDemo('client')">
+              <lucide-icon [img]="Luggage" size="15"></lucide-icon> Voyageur · Youssef
+            </button>
+            <button type="button" class="demo-chip" (click)="fillDemo('agence')">
+              <lucide-icon [img]="Building2" size="15"></lucide-icon> Agence · Atlas Voyages
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <form *ngIf="activeTab() === 'signup'" [formGroup]="signUpForm" (ngSubmit)="submitSignUp()" novalidate>
+        <div class="field">
+          <span class="label">Je suis</span>
+          <div class="role-cards" id="role" role="radiogroup" aria-label="Type de compte">
+            <label class="role-card" [class.selected]="signUpForm.get('role')?.value === 'client'">
+              <input type="radio" formControlName="role" value="client" />
+              <lucide-icon [img]="Luggage" size="20"></lucide-icon>
+              <span><strong>Voyageur</strong><small>Je réserve des séjours</small></span>
+            </label>
+            <label class="role-card" [class.selected]="signUpForm.get('role')?.value === 'agence'">
+              <input type="radio" formControlName="role" value="agence" />
+              <lucide-icon [img]="Building2" size="20"></lucide-icon>
+              <span><strong>Agence</strong><small>Je publie des logements</small></span>
+            </label>
+          </div>
+          <div class="error" *ngIf="signUpForm.get('role')?.touched && signUpForm.get('role')?.invalid">Choisissez un type de compte.</div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="prenom">Prénom</label>
+            <div class="input-wrap" [class.invalid]="signUpForm.get('prenom')?.touched && signUpForm.get('prenom')?.invalid">
+              <lucide-icon [img]="User" size="18"></lucide-icon>
+              <input id="prenom" type="text" formControlName="prenom" placeholder="Youssef" autocomplete="given-name" />
+            </div>
+            <div class="error" *ngIf="signUpForm.get('prenom')?.touched && signUpForm.get('prenom')?.invalid">2 caractères minimum.</div>
+          </div>
+          <div class="field">
+            <label for="nom">Nom</label>
+            <div class="input-wrap" [class.invalid]="signUpForm.get('nom')?.touched && signUpForm.get('nom')?.invalid">
+              <lucide-icon [img]="User" size="18"></lucide-icon>
+              <input id="nom" type="text" formControlName="nom" placeholder="El Amrani" autocomplete="family-name" />
+            </div>
+            <div class="error" *ngIf="signUpForm.get('nom')?.touched && signUpForm.get('nom')?.invalid">2 caractères minimum.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email2">Email</label>
+          <div class="input-wrap" [class.invalid]="signUpForm.get('email')?.touched && signUpForm.get('email')?.invalid">
+            <lucide-icon [img]="Mail" size="18"></lucide-icon>
+            <input id="email2" type="email" formControlName="email" placeholder="vous@exemple.com" autocomplete="email" />
+          </div>
+          <div class="error" *ngIf="signUpForm.get('email')?.touched && signUpForm.get('email')?.invalid">Saisissez une adresse email valide.</div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="password2">Mot de passe</label>
+            <div class="input-wrap" [class.invalid]="signUpForm.get('mot_de_passe')?.touched && signUpForm.get('mot_de_passe')?.invalid">
+              <lucide-icon [img]="Lock" size="18"></lucide-icon>
+              <input id="password2" [type]="showSignupPassword() ? 'text' : 'password'" formControlName="mot_de_passe" placeholder="••••••••" autocomplete="new-password" />
+              <button type="button" class="eye" (click)="showSignupPassword.set(!showSignupPassword())" [attr.aria-label]="showSignupPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+                <lucide-icon [img]="showSignupPassword() ? EyeOff : Eye" size="18"></lucide-icon>
+              </button>
+            </div>
+            <div class="error" *ngIf="signUpForm.get('mot_de_passe')?.touched && signUpForm.get('mot_de_passe')?.invalid">6 caractères minimum.</div>
+          </div>
+          <div class="field">
+            <label for="password_confirmation">Confirmation</label>
+            <div class="input-wrap" [class.invalid]="signUpForm.get('password_confirmation')?.touched && (signUpForm.get('password_confirmation')?.invalid || signUpForm.errors?.['passwordMismatch'])">
+              <lucide-icon [img]="Lock" size="18"></lucide-icon>
+              <input id="password_confirmation" [type]="showSignupPassword() ? 'text' : 'password'" formControlName="password_confirmation" placeholder="••••••••" autocomplete="new-password" />
+            </div>
+            <div class="error" *ngIf="signUpForm.errors?.['passwordMismatch'] && signUpForm.get('password_confirmation')?.touched">Les mots de passe ne correspondent pas.</div>
+          </div>
+        </div>
+
+        <button class="primary" type="submit" [disabled]="(isLoading$ | async) || signUpForm.invalid">
+          <span class="spinner" *ngIf="isLoading$ | async"></span>
+          <span>{{ (isLoading$ | async) ? 'Création du compte…' : 'Créer mon compte' }}</span>
+        </button>
+      </form>
+
+      <p class="footnote"><lucide-icon [img]="ShieldCheck" size="13"></lucide-icon> Connexion sécurisée · PFA ISGA — TravelPlan</p>
+    </section>
+  </main>
+</div>

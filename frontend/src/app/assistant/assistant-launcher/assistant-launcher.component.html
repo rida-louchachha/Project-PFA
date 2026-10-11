@@ -1,0 +1,43 @@
+<ng-container *ngIf="visible()">
+  <div class="panel" *ngIf="open()" role="dialog" aria-label="TravelPlan AI">
+    <div class="panel-header">
+      <div class="brand">
+        <div class="brand-icon"><lucide-icon [img]="Sparkles" size="18"></lucide-icon></div>
+        <div>
+          <div class="brand-name">TravelPlan AI</div>
+          <div class="brand-sub"><span class="online"></span>Assistant intelligent de réservation</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="icon-btn" (click)="expand()" title="Ouvrir en plein écran" aria-label="Ouvrir en plein écran">
+          <lucide-icon [img]="Maximize2" size="16"></lucide-icon>
+        </button>
+        <button type="button" class="icon-btn" (click)="toggle()" title="Fermer" aria-label="Fermer">
+          <lucide-icon [img]="X" size="18"></lucide-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="topic">
+      <label for="assistant-topic">Sujet</label>
+      <select id="assistant-topic" (change)="onSelect($any($event.target).value)">
+        <option value="general" [selected]="selected() === null">Question générale</option>
+        <option *ngFor="let r of reservations()" [value]="r.id" [selected]="selected() === r.id">{{ optionLabel(r) }}</option>
+      </select>
+    </div>
+
+    <app-assistant-conversation class="conversation" [reservationId]="selected()" [compact]="true"></app-assistant-conversation>
+  </div>
+
+  <button
+    type="button"
+    class="fab"
+    [class.is-open]="open()"
+    (click)="toggle()"
+    [attr.aria-expanded]="open()"
+    aria-label="Ouvrir TravelPlan AI">
+    <lucide-icon *ngIf="!open()" [img]="Sparkles" size="24"></lucide-icon>
+    <lucide-icon *ngIf="open()" [img]="X" size="24"></lucide-icon>
+    <span class="fab-label" *ngIf="!open()">Assistant IA</span>
+  </button>
+</ng-container>

@@ -1,0 +1,316 @@
+<!-- Booking Dialog Backdrop -->
+<div 
+  class="dialog-backdrop" 
+  *ngIf="isOpen" 
+  (click)="onBackdropClick($event)">
+  
+  <!-- Dialog Container -->
+  <div class="dialog-container" (click)="$event.stopPropagation()">
+    
+    <!-- Dialog Header -->
+    <div class="dialog-header">
+      <div class="header-content">
+        <div class="property-info">
+          <img 
+            [src]="accommodation.photo_url || getDefaultImage()" 
+            [alt]="accommodation.titre"
+            (error)="onImageError($event)"
+            class="property-thumbnail">
+          <div class="property-details">
+            <h2 class="property-title">{{ accommodation.titre }}</h2>
+            <p class="property-agency">{{ accommodation.agence.nom }}</p>
+            <div class="property-price">
+              <span class="price-amount">{{ accommodation.tarif_amount }}</span>
+              <span class="price-currency">{{ accommodation.devise | currencyLabel }}</span>
+              <span class="price-unit">/ {{ accommodation.tarif_unit }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="close-btn" (click)="onClose()" type="button">
+        <lucide-icon [img]="X" size="24"></lucide-icon>
+      </button>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+      <div 
+        *ngFor="let step of steps" 
+        class="step-item"
+        [ngClass]="getStepStatus(step.id)">
+        <div class="step-indicator">
+          <span class="step-number" *ngIf="getStepStatus(step.id) !== 'completed'">{{ step.id }}</span>
+          <lucide-icon [img]="Check" size="16" *ngIf="getStepStatus(step.id) === 'completed'"></lucide-icon>
+        </div>
+        <div class="step-info">
+          <h4 class="step-title">{{ step.title }}</h4>
+          <p class="step-description">{{ step.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dialog Body -->
+    <div class="dialog-body">
+      
+      <!-- Step 1: Reservation Details -->
+      <div class="step-content" *ngIf="currentStep === 1">
+        <div class="step-header">
+          <lucide-icon [img]="Calendar" size="24"></lucide-icon>
+          <h3>Reservation Details</h3>
+        </div>
+
+        <form [formGroup]="reservationForm" class="reservation-form">
+          <!-- Date Selection -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="checkIn">Check-in Date</label>
+              <input
+                id="checkIn"
+                type="date"
+                formControlName="checkIn"
+                class="form-control"
+                [class.error]="reservationForm.get('checkIn')?.invalid && reservationForm.get('checkIn')?.touched">
+              <div class="error-message" *ngIf="reservationForm.get('checkIn')?.invalid && reservationForm.get('checkIn')?.touched">
+                Check-in date is required
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="checkOut">Check-out Date</label>
+              <input
+                id="checkOut"
+                type="date"
+                formControlName="checkOut"
+                class="form-control"
+                [class.error]="reservationForm.get('checkOut')?.invalid && reservationForm.get('checkOut')?.touched">
+              <div class="error-message" *ngIf="reservationForm.get('checkOut')?.invalid && reservationForm.get('checkOut')?.touched">
+                Check-out date is required
+              </div>
+            </div>
+          </div>
+
+          <!-- Guests Selection -->
+          <div class="form-group">
+            <label for="guests">Number of Guests</label>
+            <select
+              id="guests"
+              formControlName="guests"
+              class="form-control"
+              [class.error]="reservationForm.get('guests')?.invalid && reservationForm.get('guests')?.touched">
+              <option [ngValue]="idx + 1" *ngFor="let i of [].constructor(accommodation.capacite); let idx = index">
+                {{ idx + 1 }} voyageur{{ idx === 0 ? '' : 's' }}
+              </option>
+            </select>
+            <div class="error-message" *ngIf="reservationForm.get('guests')?.invalid && reservationForm.get('guests')?.touched">
+              Please select number of guests
+            </div>
+          </div>
+
+          <!-- Booking Summary -->
+          <div class="booking-summary">
+            <h4>Booking Summary</h4>
+            <div class="summary-row">
+              <span>Duration:</span>
+              <span>{{ totalDays }} day{{ totalDays !== 1 ? 's' : '' }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Guests:</span>
+              <span>{{ reservationForm.get('guests')?.value }} person{{ reservationForm.get('guests')?.value !== 1 ? 's' : '' }}</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total Amount:</span>
+              <span class="total-price">
+                <lucide-icon [img]="Banknote" size="18"></lucide-icon>
+                {{ totalAmount }} {{ accommodation.devise | currencyLabel }}
+              </span>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 2: Payment Information -->
+      <div class="step-content" *ngIf="currentStep === 2">
+        <div class="step-header">
+          <lucide-icon [img]="CreditCard" size="24"></lucide-icon>
+          <h3>Payment Information</h3>
+        </div>
+
+        <form [formGroup]="paymentForm" class="payment-form">
+          <!-- Payment Method -->
+          <div class="form-group">
+            <label>Payment Method</label>
+            <div class="payment-methods">
+              <label class="payment-method-option">
+                <input
+                  type="radio"
+                  formControlName="paymentMethod"
+                  value="en_ligne">
+                <span class="payment-method-label">
+                  <lucide-icon [img]="CreditCard" size="20"></lucide-icon>
+                  Online Payment
+                </span>
+              </label>
+              <label class="payment-method-option">
+                <input
+                  type="radio"
+                  formControlName="paymentMethod"
+                  value="terminal">
+                <span class="payment-method-label">
+                  <lucide-icon [img]="CreditCard" size="20"></lucide-icon>
+                  Card Terminal
+                </span>
+              </label>
+              <label class="payment-method-option">
+                <input
+                  type="radio"
+                  formControlName="paymentMethod"
+                  value="especes">
+                <span class="payment-method-label">
+                  <lucide-icon [img]="Banknote" size="20"></lucide-icon>
+                  Cash
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Online Payment Fields -->
+          <div class="card-details" *ngIf="paymentForm.get('paymentMethod')?.value === 'en_ligne'">
+            <div class="form-group">
+              <label for="cardNumber">Card Number</label>
+              <input
+                id="cardNumber"
+                type="text"
+                formControlName="cardNumber"
+                placeholder="1234 5678 9012 3456"
+                maxlength="16"
+                class="form-control"
+                [class.error]="paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched">
+              <div class="error-message" *ngIf="paymentForm.get('cardNumber')?.invalid && paymentForm.get('cardNumber')?.touched">
+                Valid card number is required (16 digits)
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="expiryDate">Expiry Date</label>
+                <input
+                  id="expiryDate"
+                  type="text"
+                  formControlName="expiryDate"
+                  placeholder="MM/YY"
+                  maxlength="5"
+                  class="form-control"
+                  [class.error]="paymentForm.get('expiryDate')?.invalid && paymentForm.get('expiryDate')?.touched">
+                <div class="error-message" *ngIf="paymentForm.get('expiryDate')?.invalid && paymentForm.get('expiryDate')?.touched">
+                  Valid expiry date required (MM/YY)
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="cvv">CVV</label>
+                <input
+                  id="cvv"
+                  type="text"
+                  formControlName="cvv"
+                  placeholder="123"
+                  maxlength="4"
+                  class="form-control"
+                  [class.error]="paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched">
+                <div class="error-message" *ngIf="paymentForm.get('cvv')?.invalid && paymentForm.get('cvv')?.touched">
+                  Valid CVV required (3-4 digits)
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="cardholderName">Cardholder Name</label>
+              <input
+                id="cardholderName"
+                type="text"
+                formControlName="cardholderName"
+                placeholder="John Doe"
+                class="form-control"
+                [class.error]="paymentForm.get('cardholderName')?.invalid && paymentForm.get('cardholderName')?.touched">
+              <div class="error-message" *ngIf="paymentForm.get('cardholderName')?.invalid && paymentForm.get('cardholderName')?.touched">
+                Cardholder name is required
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Summary -->
+          <div class="payment-summary">
+            <h4>Payment Summary</h4>
+            <div class="summary-row">
+              <span>Payment Method:</span>
+              <span>{{ getPaymentMethodDisplayName(paymentForm.get('paymentMethod')?.value) }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Check-in:</span>
+              <span>{{ reservationForm.get('checkIn')?.value | date:'mediumDate' }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Check-out:</span>
+              <span>{{ reservationForm.get('checkOut')?.value | date:'mediumDate' }}</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total to Pay:</span>
+              <span class="total-price">
+                <lucide-icon [img]="Banknote" size="18"></lucide-icon>
+                {{ totalAmount }} {{ accommodation.devise | currencyLabel }}
+              </span>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Error/Success Messages -->
+      <div class="message-container">
+        <div class="error-message-banner" *ngIf="errorMessage">
+          <lucide-icon [img]="AlertCircle" size="20"></lucide-icon>
+          {{ errorMessage }}
+        </div>
+        <div class="success-message-banner" *ngIf="successMessage">
+          <lucide-icon [img]="Check" size="20"></lucide-icon>
+          {{ successMessage }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Dialog Footer -->
+    <div class="dialog-footer">
+      <div class="footer-actions">
+        <!-- Step 1 Actions -->
+        <ng-container *ngIf="currentStep === 1">
+          <button class="btn-secondary" (click)="onClose()" type="button">
+            Cancel
+          </button>
+          <button 
+            class="btn-primary" 
+            (click)="nextStep()" 
+            type="button"
+            [disabled]="!reservationForm.valid">
+            <span>Continue to Payment</span>
+            <lucide-icon [img]="ChevronRight" size="16"></lucide-icon>
+          </button>
+        </ng-container>
+
+        <!-- Step 2 Actions -->
+        <ng-container *ngIf="currentStep === 2">
+          <button class="btn-secondary" (click)="previousStep()" type="button">
+            <lucide-icon [img]="ChevronLeft" size="16"></lucide-icon>
+            Back
+          </button>
+          <button 
+            class="btn-primary" 
+            (click)="completeBooking()" 
+            type="button"
+            [disabled]="!paymentForm.valid || isProcessing">
+            <lucide-icon [img]="Loader2" size="16" *ngIf="isProcessing" class="spinning"></lucide-icon>
+            <lucide-icon [img]="Check" size="16" *ngIf="!isProcessing"></lucide-icon>
+            <span *ngIf="!isProcessing">Complete Booking</span>
+            <span *ngIf="isProcessing">Processing...</span>
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+  </div>
+</div>
